@@ -97,7 +97,7 @@ size_t countChunks(const vector<int>& arr)
             }
         }
     };
-    reduce(execution::par, arr.begin(), arr.end(), 0, operatorLambda);
+    reduce(execution::par, arr.begin(), arr.end(), 0, operatorLambda); // the redux (result) is irrelevant, we are interested in the side effect
     return chunkCount;
     // Time complexity: O(log(n)) - with enough threads
     // Space complexity: O(1)
@@ -115,7 +115,9 @@ size_t countChunks(const vector<int>& arr)
  * 
  * Node root is assumed to be at the level 0. All its children are level 1, etc.
  */
-int getLevelSum(const INode& root, size_t n) {
+int getLevelSum(const INode& root, size_t n)
+{
+    // TODO: implement some kind of BFS or DFS algorithm to traverse the tree, but first a concrete Node class
 }
 
 /**
@@ -132,5 +134,26 @@ int getLevelSum(const INode& root, size_t n) {
  * E.g. for given vector [12,13,11,14]
  * the function should return [2, 3].
  */
-vector<size_t> getReversalsToSort(const vector<int>& arr) {
+vector<size_t> getReversalsToSort(const vector<int>& arr)
+{
+    // Let's use some kind of divide and conquer approach.
+    // We can interpret sorting as repeatedly placing an element to its correct position in a sorted array, i.e. insertion sort.
+    // Therefore, the algorithm can be simplified to repeatedly emplacing yet an unsorted element using the reversals.
+    // Let's look at some examples (in columns):
+    /*  
+        a)        b)        c)          d)          e)            f) 
+        1 3 4 2   1 2 4 3   1 2 3 5 4   1 2 4 5 3   1 2 3 5 6 4   1 2 3 4 6 5
+        4 3 1 2   4 2 1 3   5 3 2 1 4   5 4 2 1 3   6 5 3 2 1 4   6 4 3 2 1 5
+        2 1 3 4   3 1 2 4   4 1 2 3 5   3 1 2 4 5   4 1 2 3 5 6   5 1 2 3 4 6
+        1 2 3 4   2 1 3 4   3 2 1 4 5   2 1 3 4 5   3 2 1 4 5 6   4 3 2 1 5 6
+                  1 2 3 4   1 2 3 4 5   1 2 3 4 5   1 2 3 4 5 6   1 2 3 4 5 6 
+    */ 
+    // The emerging pattern seems to be the following:
+    /*
+        1. Reverse all the already sorted elements,
+        2. reverse all elements including the new element,
+        3. find the correct position (counting from 1) N of the new element in the sorted array,
+        4. reverse N elements,
+        5. reverse N-1 elements if N > 1.
+    */
 }
