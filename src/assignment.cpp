@@ -156,4 +156,41 @@ vector<size_t> getReversalsToSort(const vector<int>& arr)
         4. reverse N elements,
         5. reverse N-1 elements if N > 1.
     */
+
+    auto binaryIdxSearch = [](const vector<int>& sorted, int element) -> size_t
+    {
+        size_t left = 0;
+        size_t right = sorted.size();
+        while (left < right)
+        {
+            size_t middle = (left + right) >> 1;
+            if (sorted[middle] < element)
+            {
+                left = middle + 1;
+            }
+            else
+            {
+                right = middle;
+            }
+        }
+        return left;
+    };
+
+    vector<size_t> reversals;
+    vector<int> sorted;
+    sorted.push_back(arr[0]);
+    for (size_t i = 1; i < arr.size(); i++)
+    {
+        // the simplest solution probably, of course, there are many ways how to generate less reversals
+        reversals.push_back(i);
+        reversals.push_back(i + 1);
+        size_t correctIdx = binaryIdxSearch(sorted, arr[i]);
+        reversals.push_back(correctIdx + 1);
+        reversals.push_back(correctIdx); // assume that 0 elements can be reversed for simplicity
+        sorted.insert(sorted.begin() + correctIdx, arr[i]); // convert position to index
+    }
+    // Time complexity (of this algorithm): O(n*log(n)) if insert is in O(log(n)) or faster, otherwise O(n^2) - this case with STL vector
+    // Space complexity: O(n)
+    
+    return reversals;
 }

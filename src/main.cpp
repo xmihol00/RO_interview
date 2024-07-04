@@ -28,9 +28,9 @@ int main(int argc, char** argv)
             try
             {
                 parsedArgs.testNumber = stoi(args[i]);
-                if (parsedArgs.testNumber < 1 || parsedArgs.testNumber > 3)
+                if (parsedArgs.testNumber < 1 || parsedArgs.testNumber > 4)
                 {
-                    cerr << "Error: Test number must be between 1 and 3 inclusive, got '" << args[i] << "'." << endl;
+                    cerr << "Error: Test number must be between 1 and 4 inclusive, got '" << args[i] << "'." << endl;
                     exit(-1);
                 }
             }
@@ -81,6 +81,16 @@ int main(int argc, char** argv)
     
     case 2:
         outputFile << countChunks(inputVector);
+        break;
+    
+    case 4:
+        {// scope for the local variable
+            vector<size_t> reversals = getReversalsToSort(inputVector);
+            for (size_t &value : reversals)
+            {
+                outputFile << value << ' ';
+            }
+        }
         break;
     }
     outputFile.close();

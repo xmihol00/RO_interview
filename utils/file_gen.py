@@ -15,3 +15,6 @@ np.array([0, 2, 0, 2, 0, 2, 0, 2, 0], dtype=np.int32).tofile(os.path.join(DST_DI
 np.array([2, 0, 2, 0, 2, 0, 2, 0, 2], dtype=np.int32).tofile(os.path.join(DST_DIR, "t2_5.bin"))
 np.array([2, 0, 2, 0], dtype=np.int32).tofile(os.path.join(DST_DIR, "t2_2.bin"))
 np.array([5, 4, 0, 0, -1, 0, 2, -5, 5, -5, 5, 0, 0, 4, -4, 0, 1, 0, 22, 3, 0, 7, 7, 7, 7], dtype=np.int32).tofile(os.path.join(DST_DIR, "t2_7.bin"))
+
+
+np.array([12, 13, 11, 14], dtype=np.int32).tofile(os.path.join(DST_DIR, "t4_2-3.bin"))
