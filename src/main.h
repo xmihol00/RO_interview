@@ -4,5 +4,8 @@
 #include "assignment.h"
 
 #include <iostream>
+#include <vector>
+#include <string>
+#include <fstream>
 
 #endif // _MAIN_H_
