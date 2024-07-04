@@ -1,6 +1,11 @@
 #pragma once
 #include <vector>
 #include <cstdint>
+#include <stdexcept>
+#include <algorithm> // sort
+#include <atomic>    // atomic addition
+#include <numeric>   // reduce
+#include <execution> // paralell reduce
 
 #include "INode.h"
 

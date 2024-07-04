@@ -5,9 +5,9 @@ PROJECT_DIR = $(MAKEFILE_DIR:$(CURRENT_DIR)/%=%)
 
 CPP_SRC = $(wildcard $(PROJECT_DIR)/src/*.cpp)
 CC = $(shell command -v icpx >/dev/null 2>&1 && echo "icpx" || echo "g++") # use intel compiler if available (almost always faster), otherwise use g++
-CFLAGS = -Wall -Wextra -std=c++20 -O3
+CFLAGS = -Wall -Wextra -std=c++20 -O3 -ltbb
 
-.PHONY: all clean naive
+.PHONY: all clean naive parallel
 
 # let's not compile into object files, the program is small enough to compile everything at once
 all:
@@ -15,6 +15,9 @@ all:
 
 naive:
 	$(CC) $(CFLAGS) $(CPP_SRC) -D_NAIVE_APPROACH_ -o $(PROJECT_DIR)/main
+
+parallel:
+	$(CC) $(CFLAGS) $(CPP_SRC) -D_PARALLEL_APPROACH_ -o $(PROJECT_DIR)/main
 
 clean:
 	rm -f $(PROJECT_DIR)/main

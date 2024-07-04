@@ -1,9 +1,5 @@
-#include <vector>
-#include <cstdint>
-#include <stdexcept>
-#include <algorithm>
-
 #include "INode.h"
+#include "assignment.h"
 
 using namespace std; // let's avoid typing 'std::' everywhere
 
@@ -39,6 +35,11 @@ int getClosestToZero(const vector<int>& arr)
     //                  Additionally, the for loop will have a time complexity of O(n), so the overall time complexity is O(n*log(n))*O(n) = O(n^2*log(n)).
     // Space complexity: O(n).
 #endif
+
+    // TODO: use min with side effect indicating negative/positive value
+
+
+    // TODO: try to use threads and vectorization to speed up the process
 }
 
 /**
@@ -49,7 +50,60 @@ int getClosestToZero(const vector<int>& arr)
  *
  * Example: [5, 4, 0, 0, -1, 0, 2, 0, 0] contains 3 chunks
  */
-size_t countChunks(const vector<int>& arr) {
+size_t countChunks(const vector<int>& arr)
+{
+#ifdef _NAIVE_APPROACH_
+    size_t chunkCount = 0;
+    bool inChunk = false;
+    for (const int &value : arr)
+    {
+        // avoid if statements, branch prediction would be most likely often wrong
+        bool notZero = value != 0;
+        chunkCount += !inChunk && notZero; // true when non-zero element is reached after a sequence of zeroes, otherwise false
+        inChunk = notZero;
+    }
+    return chunkCount;
+    // Time complexity: O(n)
+    // Space complexity: O(1)
+#endif
+
+#ifdef _PARALLEL_APPROACH_
+    // This problem seems to me quite simillar to computing the numbers of Carry, Propagate and Generate operations in the addition of two numbers using CLA adder.
+    // Meaning, we can use reduce and solve the problem in parallel with a correct operator.
+    atomic<size_t> chunkCount(0); // atomic access to avoid race condition
+    auto operatorLambda = [&](int current, int next) // the operator must be associative to work with reduce, which is this case
+    { 
+        if (current == 0) 
+        {
+            if (next != 0) 
+            {
+                chunkCount++; // sequence of zeroes ended, next chunk starts -- be aware, this is a SIDE EFFECT!
+                return 1;
+            }
+            else
+            {
+                return 0; // sequence of zeroes continues
+            }
+        }
+        else
+        {
+            if (next == 0)
+            {
+                return 0; // sequence of non-zeroes ended
+            }
+            else
+            {
+                return 1; // sequence of non-zeroes continues
+            }
+        }
+    };
+    reduce(execution::par, arr.begin(), arr.end(), 0, operatorLambda);
+    return chunkCount;
+    // Time complexity: O(log(n)) - with enough threads
+    // Space complexity: O(1)
+#endif
+
+    // TODO: try to use AVX instructions, just to see if it's even possible to implement it
 }
 
 /**

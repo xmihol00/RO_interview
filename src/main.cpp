@@ -53,34 +53,37 @@ int main(int argc, char** argv)
         exit(-1);
     }
 
+    ifstream inputFile(parsedArgs.inputFilePath, ios::binary);
+    if (!inputFile.is_open())
+    {
+        cerr << "Error: Could not open input file '" << parsedArgs.inputFilePath << "'." << endl;
+        exit(-1);
+    }
+    inputFile.seekg(0, ios::end);
+    size_t fileSizeInts = (static_cast<size_t>(inputFile.tellg()) + sizeof(int) - 1) / sizeof(int); // assume that the file contains only integers
+    inputFile.seekg(0, ios::beg);
+    vector<int> inputVector(fileSizeInts); // reserve space for the vector
+    inputFile.read(reinterpret_cast<char *>(inputVector.data()), fileSizeInts * sizeof(int)); // assume that the endianness is correct
+    inputFile.close();
+
+    ofstream outputFile(parsedArgs.outputFilePath, ios::binary);
+    if (!outputFile.is_open())
+    {
+        cerr << "Error: Could not open output file '" << parsedArgs.outputFilePath << "'." << endl;
+        exit(-1);
+    }
+
     switch (parsedArgs.testNumber)
     {
     case 1:
-        ifstream inputFile(parsedArgs.inputFilePath, ios::binary);
-        if (!inputFile.is_open())
-        {
-            cerr << "Error: Could not open input file '" << parsedArgs.inputFilePath << "'." << endl;
-            exit(-1);
-        }
-        inputFile.seekg(0, ios::end);
-        size_t fileSizeInts = (static_cast<size_t>(inputFile.tellg()) + sizeof(int) - 1) / sizeof(int); // assume that the file contains only integers
-        inputFile.seekg(0, ios::beg);
-        vector<int> inputVector(fileSizeInts); // reserve space for the vector
-        inputFile.read(reinterpret_cast<char *>(inputVector.data()), fileSizeInts * sizeof(int)); // assume that the endianness is correct
-        inputFile.close();
-
-        int closestToZero = getClosestToZero(inputVector);
-        ofstream outputFile(parsedArgs.outputFilePath, ios::binary);
-        if (!outputFile.is_open())
-        {
-            cerr << "Error: Could not open output file '" << parsedArgs.outputFilePath << "'." << endl;
-            exit(-1);
-        }
-        // write the result to the output file in ASCII
-        outputFile << closestToZero;
-        outputFile.close();
+        outputFile << getClosestToZero(inputVector); // write the result to the output file in ASCII
+        break;
+    
+    case 2:
+        outputFile << countChunks(inputVector);
         break;
     }
+    outputFile.close();
 
     return 0;
 }
