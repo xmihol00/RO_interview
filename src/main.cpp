@@ -116,11 +116,25 @@ int main(int argc, char** argv)
         switch (parsedArgs.testNumber)
         {
         case 1:
-            outputFile << getClosestToZero(inputVector); // write the result to the output file in ASCII
+            {
+                auto start = chrono::high_resolution_clock::now();
+                int result = getClosestToZero(inputVector);
+                auto end = chrono::high_resolution_clock::now();
+                auto duration = chrono::duration_cast<chrono::milliseconds>(end - start);
+                cerr << duration.count() << endl;
+                outputFile << result; // write the result to the output file in ASCII
+            }
             break;
         
         case 2:
-            outputFile << countChunks(inputVector);
+            {
+                auto start = chrono::high_resolution_clock::now();
+                int result = countChunks(inputVector);
+                auto end = chrono::high_resolution_clock::now();
+                auto duration = chrono::duration_cast<chrono::milliseconds>(end - start);
+                cerr << duration.count() << endl;
+                outputFile << result; // write the result to the output file in ASCII
+            }
             break;
         
         case 4:

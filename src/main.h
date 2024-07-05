@@ -10,5 +10,6 @@
 #include <string>
 #include <fstream>
 #include <omp.h>
+#include <chrono>
 
 #endif // _MAIN_H_
