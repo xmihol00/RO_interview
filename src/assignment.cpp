@@ -54,7 +54,7 @@ int getClosestToZero(const vector<int>& arr)
     #pragma omp parallel // start threads
     {
         int threadSmallestDistance = INT32_MAX; // each thread has its own smallest distance
-        #pragma omp for nowait simd aligned(data: 64) simdlen(16) schedule(static) // distribute the work among threads, use vectorization
+        #pragma omp for simd aligned(data: 64) simdlen(16) schedule(static) nowait // distribute the work among threads, use vectorization
         for (size_t i = 0; i < arr.size(); i++)
         {
             int value = data[i];
@@ -115,7 +115,7 @@ size_t countChunks(const vector<int>& arr)
 #ifdef _APPROACH_3_
     using int32_16_t = __m512i;
     // assume the data is aligned to 64 bytes
-    const int32_16_t *data = reinterpret_cast<const int32_16_t*>(arr.data());
+    const int32_16_t *data = reinterpret_cast<const int32_16_t *>(arr.data());
     size_t chunkCount = 0;
     bool inChunk = false;
     constexpr int SIMD_LEN = 16;
@@ -157,7 +157,80 @@ size_t countChunks(const vector<int>& arr)
  */
 int getLevelSum(const INode& root, size_t n)
 {
-    // TODO: implement some kind of BFS or DFS algorithm to traverse the tree, but first a concrete Node class
+#ifdef _APPROACH_1_
+    // Simple recursive approach, i.e. depth-first traversal
+    if (n == 0)
+    {
+        return root.value();
+    }
+    else
+    {
+        int sum = 0;
+        for (const auto &child : root.children())
+        {
+            if (child != nullptr)
+            {
+                sum += getLevelSum(*child, n - 1);
+            }
+        }
+        return sum;
+    }
+#endif
+
+#ifdef _APPROACH_2_
+    // Non-recursive approach, let's use a queue, therefore breadth-first traversal
+    queue<pair<const INode *, size_t>> nodeQueue;
+    nodeQueue.push({&root, n});
+    size_t sum = 0;
+
+    while (!nodeQueue.empty())
+    {
+        const INode *node = nodeQueue.front().first;
+        size_t level = nodeQueue.front().second;
+        nodeQueue.pop();
+
+        if (level == 0)
+        {
+            sum += node->value();
+        }
+        else
+        {
+            for (const auto &child : node->children())
+            {
+                if (child != nullptr)
+                {
+                    nodeQueue.push({child.get(), level - 1});
+                }
+            }
+        }
+    }
+    return sum;
+#endif
+
+#ifdef _APPROACH_3_
+    // add OpenMP to the 1st approach for parallelism
+    if (n == 0)
+    {
+        return root.value();
+    }
+    else
+    {
+        int sum = 0;
+        for (const auto &child : root.children())
+        {
+            if (child != nullptr)
+            {
+                INode *childPtr = child.get();
+                #pragma omp task shared(sum) // parallelize the work
+                #pragma omp atomic update    // avoid race condition
+                sum += getLevelSum(*childPtr, n - 1);
+            }
+        }
+
+        #pragma omp taskwait // wait for all tasks to finish
+        return sum;
+    }
+#endif
 }
 
 /**

@@ -8,6 +8,7 @@
 #include <execution>   // execution::par
 #include <immintrin.h> // AVX instructions
 #include <bit>         // countl_zero
+#include <queue>       // queue
 
 #include "INode.h"
 

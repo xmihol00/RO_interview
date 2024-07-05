@@ -5,7 +5,7 @@ PROJECT_DIR = $(MAKEFILE_DIR:$(CURRENT_DIR)/%=%)
 
 CPP_SRC = $(wildcard $(PROJECT_DIR)/src/*.cpp)
 CC = $(shell command -v icpx >/dev/null 2>&1 && echo "icpx" || echo "g++") # use intel compiler if available (almost always faster), otherwise use g++
-CFLAGS = -Wall -Wextra -std=c++20 -O3 -ltbb
+CFLAGS = -Wall -Wextra -std=c++20 -O3 -ltbb -fopenmp
 AVX_FLAGS = -mavx2 -mavx512f -mavx512bw
 
 .PHONY: all clean a1 a2 a3 a4

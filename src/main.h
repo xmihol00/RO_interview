@@ -3,10 +3,12 @@
 
 #include "assignment.h"
 #include "AlignedAllocator.hpp"
+#include "trie.h"
 
 #include <iostream>
 #include <vector>
 #include <string>
 #include <fstream>
+#include <omp.h>
 
 #endif // _MAIN_H_

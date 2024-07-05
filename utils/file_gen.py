@@ -45,3 +45,6 @@ data.tofile(os.path.join(DST_DIR, "t2_inv_6.bin"))
 
 
 np.array([12, 13, 11, 14], dtype=np.int32).tofile(os.path.join(DST_DIR, "t4_2-3.bin"))
+
+with open(os.path.join(DST_DIR, "t3_1.txt"), "w") as f:
+    f.write("ahoj\nananas\nanatomie\nantarktida\nC\nC++\nC#\npython\npytel")

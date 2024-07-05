@@ -53,20 +53,6 @@ int main(int argc, char** argv)
         exit(-1);
     }
 
-    ifstream inputFile(parsedArgs.inputFilePath, ios::binary);
-    if (!inputFile.is_open())
-    {
-        cerr << "Error: Could not open input file '" << parsedArgs.inputFilePath << "'." << endl;
-        exit(-1);
-    }
-    inputFile.seekg(0, ios::end);
-    size_t fileSizeInts = (static_cast<size_t>(inputFile.tellg()) + sizeof(int) - 1) / sizeof(int); // assume that the file contains only integers
-    inputFile.seekg(0, ios::beg);
-    vector<int, AlignedAllocator<int>> inputVectorAligned(fileSizeInts);              // reserve space for the vector
-    vector<int> &inputVector = *reinterpret_cast<vector<int> *>(&inputVectorAligned); // this should be avoided...
-    inputFile.read(reinterpret_cast<char *>(inputVector.data()), fileSizeInts * sizeof(int)); // assume that the endianness is correct
-    inputFile.close();
-
     ofstream outputFile(parsedArgs.outputFilePath, ios::binary);
     if (!outputFile.is_open())
     {
@@ -74,25 +60,81 @@ int main(int argc, char** argv)
         exit(-1);
     }
 
-    switch (parsedArgs.testNumber)
+    if (parsedArgs.testNumber == 3)
     {
-    case 1:
-        outputFile << getClosestToZero(inputVector); // write the result to the output file in ASCII
-        break;
-    
-    case 2:
-        outputFile << countChunks(inputVector);
-        break;
-    
-    case 4:
-        {// scope for the local variable
-            vector<size_t> reversals = getReversalsToSort(inputVector);
-            for (size_t &value : reversals)
+        Trie trie(parsedArgs.inputFilePath);
+        trie.print();
+        cout << endl;
+        trie.printASCII();
+        cout << endl;
+
+    #ifdef _APPROACH_3_
+        #pragma omp parallel
+    #endif
+        {
+        #ifdef _APPROACH_3_
+            #pragma omp single
+        #endif
+            cerr << "Number of threads: " << omp_get_num_threads() << endl;
+            cerr << "Thread " << omp_get_thread_num() << " is working." << endl;
+
+        #ifdef _APPROACH_3_
+            #pragma omp single
+        #endif
             {
-                outputFile << value << ' ';
+                outputFile << getLevelSum(trie, 0) << endl;
+                outputFile << getLevelSum(trie, 1) << endl;
+                outputFile << getLevelSum(trie, 2) << endl;
+                outputFile << getLevelSum(trie, 3) << endl;
+                outputFile << getLevelSum(trie, 4) << endl;
+                outputFile << getLevelSum(trie, 5) << endl;
+                outputFile << getLevelSum(trie, 6) << endl;
+                outputFile << getLevelSum(trie, 7) << endl;
+                outputFile << getLevelSum(trie, 8) << endl;
+                outputFile << getLevelSum(trie, 9) << endl;
+                outputFile << getLevelSum(trie, 10) << endl;
+                outputFile << getLevelSum(trie, 11) << endl;
+                outputFile << getLevelSum(trie, 123) << endl;
             }
         }
-        break;
+    }
+    else
+    {
+        ifstream inputFile(parsedArgs.inputFilePath, ios::binary);
+        if (!inputFile.is_open())
+        {
+            cerr << "Error: Could not open input file '" << parsedArgs.inputFilePath << "'." << endl;
+            exit(-1);
+        }
+        inputFile.seekg(0, ios::end);
+        size_t fileSizeInts = (static_cast<size_t>(inputFile.tellg()) + sizeof(int) - 1) / sizeof(int); // assume that the file contains only integers
+        inputFile.seekg(0, ios::beg);
+        vector<int, AlignedAllocator<int>> inputVectorAligned(fileSizeInts);              // reserve space for the vector
+        vector<int> &inputVector = reinterpret_cast<vector<int> &>(inputVectorAligned); // this should be avoided...
+        inputFile.read(reinterpret_cast<char *>(inputVector.data()), fileSizeInts * sizeof(int)); // assume that the endianness is correct
+        inputFile.close();
+
+
+        switch (parsedArgs.testNumber)
+        {
+        case 1:
+            outputFile << getClosestToZero(inputVector); // write the result to the output file in ASCII
+            break;
+        
+        case 2:
+            outputFile << countChunks(inputVector);
+            break;
+        
+        case 4:
+            {// scope for the local variable
+                vector<size_t> reversals = getReversalsToSort(inputVector);
+                for (size_t &value : reversals)
+                {
+                    outputFile << value << ' ';
+                }
+            }
+            break;
+        }
     }
     outputFile.close();
 
