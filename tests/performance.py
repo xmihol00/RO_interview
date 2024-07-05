@@ -16,7 +16,7 @@ os.makedirs(FIGS_DIR, exist_ok=True)
 
 MIN_POWER = 20
 MAX_POWER = 30
-data = np.random.randint(-2**30, 2**30, 2**MAX_POWER, dtype=np.int32)
+data = np.random.randint(-2**20, 2**20, 2**MAX_POWER, dtype=np.int32)
 
 approaches = ["a1", "a2", "a3"]
 
@@ -35,15 +35,16 @@ for assignment in range(1, 3):
 
     plt.plot(df.index, df[approaches[0]], label="Approach 1", marker='o')
     plt.plot(df.index, df[approaches[1]], label="Approach 2", marker='s')
+    plt.plot(df.index, df[approaches[2]], label="Approach 3", marker='^')
 
     plt.title(f"Assignment {assignment}: Performance Comparison of Implemented Approaches")
-    plt.xlabel(f"File size (2^x bytes)")
+    plt.xlabel(f"File size (2^x integers)")
     plt.ylabel(f"Time (ms)")
     plt.ylim(0, 2000 if df.max().max() > 2000 else df.max().max() + 25)
     plt.legend()
     plt.tight_layout()
 
     plt.savefig(f"{FIGS_DIR}/assignment_{assignment}.png", dpi=300)
-    plt.show()
+    #plt.show()
 
 os.system(f"rm -rf {TEST_FILES_DIR}/performance.bin")
