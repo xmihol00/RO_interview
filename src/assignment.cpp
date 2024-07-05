@@ -1,6 +1,10 @@
 #include "INode.h"
 #include "assignment.h"
 
+#if !defined(_APPROACH_1_) && !defined(_APPROACH_2_) && !defined(_APPROACH_3_) && !defined(_APPROACH_4_)
+    #define _APPROACH_1_ // default approach
+#endif
+
 using namespace std; // let's avoid typing 'std::' everywhere
 
 /*
@@ -37,8 +41,8 @@ int getClosestToZero(const vector<int>& arr)
 #endif
 
 #ifdef _APPROACH_2_
-    // Best STL approach: Find just the minimum element based on 2 sorting keys
-    return *min_element(arr.begin(), arr.end(), [](int a, int b) 
+    // STL approach: Find just the minimum element based on 2 sorting keys, use parallelism
+    return *min_element(execution::par, arr.begin(), arr.end(), [](int a, int b) 
     { 
         return abs(a) < abs(b) ||           // first key - sort based on the distance from 0
                (abs(a) == abs(b) && a > b); // second key - sort based on the sign
@@ -47,22 +51,40 @@ int getClosestToZero(const vector<int>& arr)
     // Space complexity: O(1)
 #endif
 
+#define _APPROACH_3_
 #ifdef _APPROACH_3_
-    // Optimized OpenMP approach: Use OpenMP to parallelize the work and use vectorized (SIMD/AVX) instructions to speed it up even more on a single core
+    using int32_16_t = __m512i;
+
+    // OpenMP + AVX approach: Use OpenMP for parallelism and AVX for vectorization
     int smallestDistance = INT32_MAX;
-    const int *data = arr.data();
     #pragma omp parallel // start threads
     {
-        int threadSmallestDistance = INT32_MAX; // each thread has its own smallest distance
-        #pragma omp for simd aligned(data: 64) simdlen(16) schedule(static) nowait // distribute the work among threads, use vectorization
-        for (size_t i = 0; i < arr.size(); i++)
+        // distribute the data among threads
+        size_t elementsPerThread = arr.size() / omp_get_num_threads();
+        size_t threadOffset = elementsPerThread * omp_get_thread_num();
+        const int *data = arr.data() + threadOffset;
+
+        // assume data are aligned to 64 bytes
+        const int32_16_t *dataVector = reinterpret_cast<const int32_16_t *>(data);
+        int32_16_t threadSmallestDistances = _mm512_set1_epi32(INT32_MAX); 
+        constexpr int SIMD_LEN = 16;
+        
+        for (size_t i = 0; i < elementsPerThread / SIMD_LEN; i++)
         {
-            int value = data[i];
-            bool isCloser = abs(value) < abs(threadSmallestDistance) || (abs(value) == abs(threadSmallestDistance) && value > threadSmallestDistance);
-            threadSmallestDistance = isCloser ? value : threadSmallestDistance;
+            int32_16_t batch = _mm512_load_si512(dataVector + i);
+            int32_16_t absBatch = _mm512_abs_epi32(batch);
+            int32_16_t absSmallestBatch = _mm512_abs_epi32(threadSmallestDistances);
+            uint16_t smallerBitmap = _mm512_cmp_epi32_mask(absBatch, absSmallestBatch, _MM_CMPINT_LT);
+            uint16_t equalBitmap = _mm512_cmp_epi32_mask(absBatch, absSmallestBatch, _MM_CMPINT_EQ);
+            uint16_t largerBitmap = _mm512_cmp_epi32_mask(batch, threadSmallestDistances, _MM_CMPINT_GT);
+            uint16_t finalBitmap = smallerBitmap | (equalBitmap & largerBitmap);
+            threadSmallestDistances = _mm512_mask_mov_epi32(threadSmallestDistances, finalBitmap, batch);
         }
 
-        #pragma omp critical // reduce the results
+        const int *lanes = reinterpret_cast<const int *>(&threadSmallestDistances);
+        int threadSmallestDistance = *min_element(lanes, lanes + SIMD_LEN, [](int a, int b) { return abs(a) < abs(b) || (abs(a) == abs(b) && a > b); }); 
+
+        #pragma omp critical // reduce the results, avoid race condition
         {
             smallestDistance = abs(threadSmallestDistance) < abs(smallestDistance) || 
                               (abs(threadSmallestDistance) == abs(smallestDistance) && threadSmallestDistance > smallestDistance) ? 

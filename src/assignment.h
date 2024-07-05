@@ -9,6 +9,7 @@
 #include <immintrin.h> // AVX instructions
 #include <bit>         // countl_zero
 #include <queue>       // queue
+#include <omp.h>       // OpenMP functions
 
 #include "INode.h"
 

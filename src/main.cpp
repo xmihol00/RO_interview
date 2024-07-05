@@ -74,11 +74,9 @@ int main(int argc, char** argv)
         {
         #ifdef _APPROACH_3_
             #pragma omp single
-        #endif
             cerr << "Number of threads: " << omp_get_num_threads() << endl;
             cerr << "Thread " << omp_get_thread_num() << " is working." << endl;
-
-        #ifdef _APPROACH_3_
+        
             #pragma omp single
         #endif
             {
