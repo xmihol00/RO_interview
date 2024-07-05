@@ -1,8 +1,14 @@
 #include "INode.h"
 #include "assignment.h"
 
-#if !defined(_APPROACH_1_) && !defined(_APPROACH_2_) && !defined(_APPROACH_3_) && !defined(_APPROACH_4_)
+#if !defined(_APPROACH_1_) && !defined(_APPROACH_2_) && !defined(_APPROACH_3_)
     #define _APPROACH_1_ // default approach
+#endif
+
+#if 1 // change to 1 to activate all approaches - just for better readability in IDEs like VSC
+    #define _APPROACH_1_
+    #define _APPROACH_2_
+    #define _APPROACH_3_
 #endif
 
 using namespace std; // let's avoid typing 'std::' everywhere
@@ -63,7 +69,7 @@ int getClosestToZero(const vector<int>& arr)
         size_t threadOffset = elementsPerThread * omp_get_thread_num();
         const int *data = arr.data() + threadOffset;
 
-        // assume data are aligned to 64 bytes
+        // assume data are aligned to 64 bytes - must be, otherwise the program will crash
         const int32_16_t *dataVector = reinterpret_cast<const int32_16_t *>(data);
         int32_16_t threadSmallestDistances = _mm512_set1_epi32(INT32_MAX); 
         constexpr int SIMD_LEN = 16;
@@ -71,19 +77,26 @@ int getClosestToZero(const vector<int>& arr)
         for (size_t i = 0; i < elementsPerThread / SIMD_LEN; i++)
         {
             int32_16_t batch = _mm512_load_si512(dataVector + i);
+
+            // calculate the absolute values of elements in a vector
             int32_16_t absBatch = _mm512_abs_epi32(batch);
             int32_16_t absSmallestBatch = _mm512_abs_epi32(threadSmallestDistances);
+            
+            // perform the 2-key comparison as in the 2nd approach but on a vector
             uint16_t smallerBitmap = _mm512_cmp_epi32_mask(absBatch, absSmallestBatch, _MM_CMPINT_LT);
             uint16_t equalBitmap = _mm512_cmp_epi32_mask(absBatch, absSmallestBatch, _MM_CMPINT_EQ);
             uint16_t largerBitmap = _mm512_cmp_epi32_mask(batch, threadSmallestDistances, _MM_CMPINT_GT);
             uint16_t finalBitmap = smallerBitmap | (equalBitmap & largerBitmap);
+
+            // update the smallest distances based on the comparison results
             threadSmallestDistances = _mm512_mask_mov_epi32(threadSmallestDistances, finalBitmap, batch);
         }
 
         const int *lanes = reinterpret_cast<const int *>(&threadSmallestDistances);
+        // reduce the vector of 16 elements to a single element
         int threadSmallestDistance = *min_element(lanes, lanes + SIMD_LEN, [](int a, int b) { return abs(a) < abs(b) || (abs(a) == abs(b) && a > b); }); 
 
-        #pragma omp critical // reduce the results, avoid race condition
+        #pragma omp critical // reduce the results among threads, avoid race condition
         {
             smallestDistance = abs(threadSmallestDistance) < abs(smallestDistance) || 
                               (abs(threadSmallestDistance) == abs(smallestDistance) && threadSmallestDistance > smallestDistance) ? 
@@ -115,7 +128,7 @@ size_t countChunks(const vector<int>& arr)
     bool inChunk = false;
     for (const int &value : arr)
     {
-        // avoid if statements, branch prediction would be most likely often wrong
+        // avoid if statements, branch prediction would be often wrong (depends on the data distribution)
         bool notZero = value != 0;
         chunkCount += !inChunk && notZero; // true when non-zero element is reached after a sequence of zeroes, otherwise false
         inChunk = notZero;
@@ -126,7 +139,9 @@ size_t countChunks(const vector<int>& arr)
 #endif
 
 #ifdef _APPROACH_2_
-    // Parallel approach: Use transformation, reduction and STL parallelism
+    // Parallel approach: Use transformation, reduction and STL parallelism.
+    // Identify indices where chunks start and assign them 1, assign 0 to others.
+    // Perform reduction on such transformed array.
     return transform_reduce(execution::par, arr.begin() + 1, arr.end(), arr.begin(), static_cast<int>(arr[0] != 0), 
                             plus{}, [](int a, int b) { return a != 0 && b == 0; }); 
     // Time complexity: O(log(n)) - with enough parallelism
@@ -134,12 +149,16 @@ size_t countChunks(const vector<int>& arr)
 #endif
 
 #ifdef _APPROACH_3_
+    // Single core approach, but with AVX vectorization
+    // Parallelism could be added as well similarly to the 3rd approach in the 'getClosestToZero' function
     using int32_16_t = __m512i;
-    // assume the data is aligned to 64 bytes
+    
+    // assume the data is aligned to 64 bytes - must be, otherwise the program will crash
     const int32_16_t *data = reinterpret_cast<const int32_16_t *>(arr.data());
     size_t chunkCount = 0;
     bool inChunk = false;
     constexpr int SIMD_LEN = 16;
+    
     for (size_t i = 0; i < arr.size() / SIMD_LEN; i++)
     {
         int32_16_t batch = _mm512_load_si512(data + i);
@@ -149,7 +168,7 @@ size_t countChunks(const vector<int>& arr)
         if (cmpBitmap) // at least one zero in the batch
         {
             int *batchData = reinterpret_cast<int *>(&batch);
-            for (size_t j = 0; j < SIMD_LEN; j++)
+            for (size_t j = 0; j < SIMD_LEN; j++) // perform the same operation as in the 1st approach, but only on the batch of 16 elements
             {
                 bool notZero = batchData[j] != 0;
                 chunkCount += !inChunk && notZero;
@@ -179,7 +198,7 @@ size_t countChunks(const vector<int>& arr)
 int getLevelSum(const INode& root, size_t n)
 {
 #ifdef _APPROACH_1_
-    // Simple recursive approach, i.e. depth-first traversal
+    // Simple recursive approach, i.e. depth-first traversal.
     if (n == 0)
     {
         return root.value();
@@ -199,7 +218,7 @@ int getLevelSum(const INode& root, size_t n)
 #endif
 
 #ifdef _APPROACH_2_
-    // Non-recursive approach, let's use a queue, therefore breadth-first traversal
+    // Non-recursive approach, let's use a queue, therefore breadth-first traversal.
     queue<pair<const INode *, size_t>> nodeQueue;
     nodeQueue.push({&root, n});
     size_t sum = 0;
@@ -229,7 +248,7 @@ int getLevelSum(const INode& root, size_t n)
 #endif
 
 #ifdef _APPROACH_3_
-    // add OpenMP to the 1st approach for parallelism
+    // Add OpenMP to the 1st approach for parallelism.
     if (n == 0)
     {
         return root.value();

@@ -7,7 +7,6 @@
 #include <numeric>     // transform_reduce
 #include <execution>   // execution::par
 #include <immintrin.h> // AVX instructions
-#include <bit>         // countl_zero
 #include <queue>       // queue
 #include <omp.h>       // OpenMP functions
 

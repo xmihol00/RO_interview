@@ -23,8 +23,5 @@ a2:
 a3:
 	$(CC) $(CFLAGS) $(CPP_SRC) $(AVX_FLAGS) -D_APPROACH_3_ -o $(PROJECT_DIR)/main
 
-a4:
-	$(CC) $(CFLAGS) $(CPP_SRC) -D_APPROACH_4_ -o $(PROJECT_DIR)/main
-
 clean:
 	rm -f $(PROJECT_DIR)/main
