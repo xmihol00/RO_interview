@@ -54,3 +54,11 @@ np.array([12, 13, 11, 14], dtype=np.int32).tofile(os.path.join(DST_DIR, "t4_2-3.
 
 with open(os.path.join(DST_DIR, "t3_1.txt"), "w") as f:
     f.write("ahoj\nananas\nanatomie\nantarktida\nC\nC++\nC#\npython\npytel")
+
+with open(os.path.join(DST_DIR, "t3_2.txt"), "w") as f:
+    f.write("aaaaaaaa\naaaaaaab\naaaaaaac\naaaaaaad :D\n"
+            "aaaaaaa\naaaaaab\naaaaaac\naaaaaad\n"
+            "aaaaaa\naaaaab\naaaaac\naaaaad\n"
+            "aaaaa\naaaab\naaaac\naaaad\n"
+            "aaaa\naaab\naaac\naaad\n"
+            "aaa\naab\naac\naad")

@@ -41,8 +41,46 @@ def test_assignment(number : int):
                 print(f"    {GREEN}{filename} passed.{BLACK}")
             else:
                 print(f"    {RED}{filename} failed.{BLACK} Expected: {result}, got: {output}")
+
+def test_assignment_3():
+    print(f"{CYAN}Testing assignment 3{BLACK}")
+
+    for approach in ["a1", "a2", "a3"]:
+        print(f"  {MAGENTA}Testing approach {approach}{BLACK}")
+        os.system(f"rm -rf {RESULT_FILES_DIR}")
+        os.system(f"make {approach} 2> /dev/null > /dev/null")
+        os.makedirs(RESULT_FILES_DIR, exist_ok=True)
+
+        os.system(f"file=t3_1; ./main -t 3 -i {TEST_FILES_DIR}/$file.txt -o {RESULT_FILES_DIR}/$file.txt 2>/dev/null >/dev/null")
+        os.system(f"file=t3_2; ./main -t 3 -i {TEST_FILES_DIR}/$file.txt -o {RESULT_FILES_DIR}/$file.txt 2>/dev/null >/dev/null")
+
+        filename = "t3_1.txt"
+        try:
+            with open(f"{RESULT_FILES_DIR}/{filename}", "r") as f:
+                output = f.read().strip()
+        except:
+            output = "file could not be opened or read."
+
+        result = "0\n276\n413\n483\n634\n541\n441\n221\n206\n100\n97\n0\n0"
+        if output == result:
+            print(f"    {GREEN}{filename} passed.{BLACK}")
+        else:
+            print(f"    {RED}{filename} failed.{BLACK} Expected: {result}, got: {output}")
         
+        filename = "t3_2.txt"
+        try:
+            with open(f"{RESULT_FILES_DIR}/{filename}", "r") as f:
+                output = f.read().strip()
+        except:
+            output = "file could not be opened or read."
+
+        result = "0\n97\n97\n394\n394\n394\n394\n394\n394\n32\n58\n68\n0"
+        if output == result:
+            print(f"    {GREEN}{filename} passed.{BLACK}")
+        else:
+            print(f"    {RED}{filename} failed.{BLACK} Expected: {result}, got: {output}")
 
 if __name__ == "__main__":
     test_assignment(1)
     test_assignment(2)
+    test_assignment_3()

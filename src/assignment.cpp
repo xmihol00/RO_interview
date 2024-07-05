@@ -5,7 +5,7 @@
     #define _APPROACH_1_ // default approach
 #endif
 
-#if 1 // change to 1 to activate all approaches - just for better readability in IDEs like VSC
+#if 0 // change to 1 to activate all approaches - just for better readability in IDEs like VSC
     #define _APPROACH_1_
     #define _APPROACH_2_
     #define _APPROACH_3_
@@ -307,8 +307,9 @@ vector<size_t> getReversalsToSort(const vector<int>& arr)
         2. reverse all elements including the new element,
         3. find the correct position (counting from 1) N of the new element in the sorted array,
         4. reverse N elements,
-        5. reverse N-1 elements if N > 1.
+        5. reverse N-1 elements.
     */
+    // Without any prove, this algorithm should work for any input array.   
 
     auto binaryIdxSearch = [](const vector<int>& sorted, int element) -> size_t
     {
@@ -342,8 +343,10 @@ vector<size_t> getReversalsToSort(const vector<int>& arr)
         reversals.push_back(correctIdx); // assume that 0 elements can be reversed for simplicity
         sorted.insert(sorted.begin() + correctIdx, arr[i]); // convert position to index
     }
-    // Time complexity (of this algorithm): O(n*log(n)) if insert is in O(log(n)) or faster, otherwise O(n^2) - this case with STL vector
+    // Time complexity (of this algorithm): O(n*log(n)) if insert is in O(log(n)) or faster, otherwise O(n^2), i.e. this case with STL vector
     // Space complexity: O(n)
+
+    // TODO: do some post processing, i.e remove unnecessary reversals
     
     return reversals;
 }
