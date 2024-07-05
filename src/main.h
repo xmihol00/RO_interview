@@ -2,6 +2,7 @@
 #define _MAIN_H_
 
 #include "assignment.h"
+#include "AlignedAllocator.hpp"
 
 #include <iostream>
 #include <vector>

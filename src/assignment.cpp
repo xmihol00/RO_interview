@@ -22,7 +22,7 @@ int getClosestToZero(const vector<int>& arr)
         throw invalid_argument("Empty vector, 'getClosestToZero' expects at least one element in the input vector");
     }
 
-#ifdef _NAIVE_APPROACH_
+#ifdef _APPROACH_1_
     // Naive approach: Sort the array (sorting does not have to be stable) and try to return non-negative element from the values with the smallest distance to zero
     vector<int> sortedArr(arr); // make a copy to avoid side effects, that makes the space complexity O(n)
     auto compareLambda = [](int a, int b) { return abs(a) < abs(b); };
@@ -36,10 +36,42 @@ int getClosestToZero(const vector<int>& arr)
     // Space complexity: O(n).
 #endif
 
-    // TODO: use min with side effect indicating negative/positive value
+#ifdef _APPROACH_2_
+    // Best STL approach: Find just the minimum element based on 2 sorting keys
+    return *min_element(arr.begin(), arr.end(), [](int a, int b) 
+    { 
+        return abs(a) < abs(b) ||           // first key - sort based on the distance from 0
+               (abs(a) == abs(b) && a > b); // second key - sort based on the sign
+    });
+    // Time complexity: O(n)
+    // Space complexity: O(1)
+#endif
 
+#ifdef _APPROACH_3_
+    // Optimized OpenMP approach: Use OpenMP to parallelize the work and use vectorized (SIMD/AVX) instructions to speed it up even more on a single core
+    int smallestDistance = INT32_MAX;
+    const int *data = arr.data();
+    #pragma omp parallel // start threads
+    {
+        int threadSmallestDistance = INT32_MAX; // each thread has its own smallest distance
+        #pragma omp for nowait simd aligned(data: 64) simdlen(16) schedule(static) // distribute the work among threads, use vectorization
+        for (size_t i = 0; i < arr.size(); i++)
+        {
+            int value = data[i];
+            bool isCloser = abs(value) < abs(threadSmallestDistance) || (abs(value) == abs(threadSmallestDistance) && value > threadSmallestDistance);
+            threadSmallestDistance = isCloser ? value : threadSmallestDistance;
+        }
 
-    // TODO: try to use threads and vectorization to speed up the process
+        #pragma omp critical // reduce the results
+        {
+            smallestDistance = abs(threadSmallestDistance) < abs(smallestDistance) || 
+                              (abs(threadSmallestDistance) == abs(smallestDistance) && threadSmallestDistance > smallestDistance) ? 
+                                    threadSmallestDistance : 
+                                    smallestDistance;
+        }
+    }
+    return smallestDistance;
+#endif
 }
 
 /**
@@ -52,7 +84,12 @@ int getClosestToZero(const vector<int>& arr)
  */
 size_t countChunks(const vector<int>& arr)
 {
-#ifdef _NAIVE_APPROACH_
+    if (arr.empty())
+    {
+        return 0;
+    }
+
+#ifdef _APPROACH_1_
     size_t chunkCount = 0;
     bool inChunk = false;
     for (const int &value : arr)
@@ -67,43 +104,57 @@ size_t countChunks(const vector<int>& arr)
     // Space complexity: O(1)
 #endif
 
-#ifdef _PARALLEL_APPROACH_
-    // This problem seems to me quite simillar to computing the numbers of Carry, Propagate and Generate operations in the addition of two numbers using CLA adder.
-    // Meaning, we can use reduce and solve the problem in parallel with a correct operator.
-    atomic<size_t> chunkCount(0); // atomic access to avoid race condition
-    auto operatorLambda = [&](int current, int next) // the operator must be associative to work with reduce, which is this case
-    { 
-        if (current == 0) 
-        {
-            if (next != 0) 
-            {
-                chunkCount++; // sequence of zeroes ended, next chunk starts -- be aware, this is a SIDE EFFECT!
-                return 1;
-            }
-            else
-            {
-                return 0; // sequence of zeroes continues
-            }
-        }
-        else
-        {
-            if (next == 0)
-            {
-                return 0; // sequence of non-zeroes ended
-            }
-            else
-            {
-                return 1; // sequence of non-zeroes continues
-            }
-        }
-    };
-    reduce(execution::par, arr.begin(), arr.end(), 0, operatorLambda); // the redux (result) is irrelevant, we are interested in the side effect
-    return chunkCount;
-    // Time complexity: O(log(n)) - with enough threads
+#ifdef _APPROACH_2_
+    // Parallel approach: Use transformation, reduction and STL parallelism
+    return transform_reduce(execution::par, arr.begin() + 1, arr.end(), arr.begin(), static_cast<int>(arr[0] != 0), 
+                            plus{}, [](int a, int b) { return a != 0 && b == 0; }); 
+    // Time complexity: O(log(n)) - with enough parallelism
     // Space complexity: O(1)
 #endif
 
-    // TODO: try to use AVX instructions, just to see if it's even possible to implement it
+#ifdef _APPROACH_3_
+    using int32_16_t = __m512i;
+    // assume the data is aligned to 64 bytes
+    const int32_16_t *data = reinterpret_cast<const int32_16_t*>(arr.data());
+    size_t chunkCount = 0;
+    bool inChunk = false;
+    for (size_t i = 0; i < arr.size() / 16; i++)
+    {
+        int32_16_t batch = _mm512_load_si512(data + i);
+        uint16_t cmpBitmap = _mm512_cmp_epi16_mask(batch, _mm512_setzero_si512(), _MM_CMPINT_EQ); // compare 16 elements with zero using single instruction
+
+        // assume zeros are quite rare, then the branch prediction should be quite good and the following code won't be executed often
+        if (cmpBitmap) // at least one zero in the batch
+        {
+            inChunk = inChunk && (cmpBitmap & (1 << 15)); // check the most significant bit
+            bool lsb = cmpBitmap & 1;
+            while (cmpBitmap)
+            {
+                if (inChunk) // in sequence of non-zero elements
+                {
+                    int leadingZeros = __countl_zero(cmpBitmap); // count the number of consecutive non-zero elements
+                    cmpBitmap <<= leadingZeros;
+                    inChunk = false;
+                    chunkCount++;
+                }
+                else // in sequence of zero elements
+                {
+                    int leadingOnes = __countl_one(cmpBitmap); // count the number of consecutive zero elements
+                    cmpBitmap <<= leadingOnes;
+                    inChunk = true;
+                }
+            }
+            inChunk = lsb;
+        }
+        else if (!inChunk) // no zero in the batch and not currently not in any chunk
+        {
+            chunkCount++;
+            inChunk = true;
+        }
+    }
+    return chunkCount;
+    // Time complexity: remains O(n), but the algorithm is potentially faster due to vectorization
+#endif
 }
 
 /**

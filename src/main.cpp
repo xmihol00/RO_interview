@@ -62,7 +62,8 @@ int main(int argc, char** argv)
     inputFile.seekg(0, ios::end);
     size_t fileSizeInts = (static_cast<size_t>(inputFile.tellg()) + sizeof(int) - 1) / sizeof(int); // assume that the file contains only integers
     inputFile.seekg(0, ios::beg);
-    vector<int> inputVector(fileSizeInts); // reserve space for the vector
+    vector<int, AlignedAllocator<int>> inputVectorAligned(fileSizeInts);              // reserve space for the vector
+    vector<int> &inputVector = *reinterpret_cast<vector<int> *>(&inputVectorAligned); // this should be avoided...
     inputFile.read(reinterpret_cast<char *>(inputVector.data()), fileSizeInts * sizeof(int)); // assume that the endianness is correct
     inputFile.close();
 

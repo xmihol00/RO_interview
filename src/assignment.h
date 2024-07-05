@@ -3,10 +3,11 @@
 #include <vector>
 #include <cstdint>
 #include <stdexcept>
-#include <algorithm> // sort
-#include <atomic>    // atomic addition
-#include <numeric>   // reduce
-#include <execution> // paralell reduce
+#include <algorithm>   // sort
+#include <numeric>     // transform_reduce
+#include <execution>   // execution::par
+#include <immintrin.h> // AVX instructions
+#include <bit>         // countl_zero
 
 #include "INode.h"
 
