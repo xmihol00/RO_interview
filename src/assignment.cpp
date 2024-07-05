@@ -51,7 +51,6 @@ int getClosestToZero(const vector<int>& arr)
     // Space complexity: O(1)
 #endif
 
-#define _APPROACH_3_
 #ifdef _APPROACH_3_
     using int32_16_t = __m512i;
 

@@ -15,6 +15,12 @@ data[1000] = -5
 data[101] = 5
 data.tofile(os.path.join(DST_DIR, "t1_5.bin"))
 
+data = np.random.randint(-100, 100, 2**16, dtype=np.int32)
+data[abs(data) < 10] = 999
+data[np.random.choice(np.arange(2**16), 50, replace=False)] = 8
+data[np.random.choice(np.arange(2**16), 50, replace=False)] = -8
+data[12345] = -7
+data.tofile(os.path.join(DST_DIR, "t1_-7.bin"))
 
 np.array([0, 0], dtype=np.int32).tofile(os.path.join(DST_DIR, "t2_0.bin"))
 np.array([0, 0, 1], dtype=np.int32).tofile(os.path.join(DST_DIR, "t2_1.bin"))
