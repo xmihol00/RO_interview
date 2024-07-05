@@ -118,33 +118,22 @@ size_t countChunks(const vector<int>& arr)
     const int32_16_t *data = reinterpret_cast<const int32_16_t*>(arr.data());
     size_t chunkCount = 0;
     bool inChunk = false;
-    for (size_t i = 0; i < arr.size() / 16; i++)
+    constexpr int SIMD_LEN = 16;
+    for (size_t i = 0; i < arr.size() / SIMD_LEN; i++)
     {
         int32_16_t batch = _mm512_load_si512(data + i);
-        uint16_t cmpBitmap = _mm512_cmp_epi16_mask(batch, _mm512_setzero_si512(), _MM_CMPINT_EQ); // compare 16 elements with zero using single instruction
+        uint16_t cmpBitmap = _mm512_cmp_epi32_mask(batch, _mm512_setzero_si512(), _MM_CMPINT_EQ); // compare 16 elements with zero using single instruction
 
         // assume zeros are quite rare, then the branch prediction should be quite good and the following code won't be executed often
         if (cmpBitmap) // at least one zero in the batch
         {
-            inChunk = inChunk && (cmpBitmap & (1 << 15)); // check the most significant bit
-            bool lsb = cmpBitmap & 1;
-            while (cmpBitmap)
+            int *batchData = reinterpret_cast<int *>(&batch);
+            for (size_t j = 0; j < SIMD_LEN; j++)
             {
-                if (inChunk) // in sequence of non-zero elements
-                {
-                    int leadingZeros = __countl_zero(cmpBitmap); // count the number of consecutive non-zero elements
-                    cmpBitmap <<= leadingZeros;
-                    inChunk = false;
-                    chunkCount++;
-                }
-                else // in sequence of zero elements
-                {
-                    int leadingOnes = __countl_one(cmpBitmap); // count the number of consecutive zero elements
-                    cmpBitmap <<= leadingOnes;
-                    inChunk = true;
-                }
+                bool notZero = batchData[j] != 0;
+                chunkCount += !inChunk && notZero;
+                inChunk = notZero;
             }
-            inChunk = lsb;
         }
         else if (!inChunk) // no zero in the batch and not currently not in any chunk
         {
