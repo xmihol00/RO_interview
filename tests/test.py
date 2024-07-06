@@ -1,6 +1,7 @@
 import re
 from glob import glob
 import os
+import numpy as np
 
 RED = "\033[1;31m"
 GREEN = "\033[1;32m"
@@ -48,7 +49,7 @@ def test_assignment_3():
     for approach in ["a1", "a2", "a3"]:
         print(f"  {MAGENTA}Testing approach {approach}{BLACK}")
         os.system(f"rm -rf {RESULT_FILES_DIR}")
-        os.system(f"make {approach} 2> /dev/null > /dev/null")
+        os.system(f"make {approach} 2>/dev/null >/dev/null")
         os.makedirs(RESULT_FILES_DIR, exist_ok=True)
 
         os.system(f"file=t3_1; ./main -t 3 -i {TEST_FILES_DIR}/$file.txt -o {RESULT_FILES_DIR}/$file.txt 2>/dev/null >/dev/null")
@@ -80,7 +81,40 @@ def test_assignment_3():
         else:
             print(f"    {RED}{filename} failed.{BLACK} Expected: {result}, got: {output}")
 
+def test_assignment_4():
+    np.random.seed(42)
+
+    print(f"{CYAN}Testing assignment 4{BLACK}")
+    os.system(f"rm -rf {RESULT_FILES_DIR}")
+    os.makedirs(RESULT_FILES_DIR, exist_ok=True)
+    os.system(f"make 2>/dev/null >/dev/null")
+    filename = "t4_random.bin"
+
+    for i in range(10):
+        n = np.random.randint(1, 100)
+        data = np.random.randint(-100, 100, n, dtype=np.int32)
+        data.tofile(os.path.join(TEST_FILES_DIR, filename))
+
+        os.system(f"file={filename}; ./main -t 4 -i {TEST_FILES_DIR}/$file -o {RESULT_FILES_DIR}/$file")
+        try:
+            with open(f"{RESULT_FILES_DIR}/{filename}", "rb") as f:
+                output = f.read()
+                commands = np.frombuffer(output, dtype=np.uint64)    
+        except:
+            print(f"    {RED}Test {i} failed.{BLACK}")
+            exit(1)
+        
+        for command in commands:
+            data[:command] = np.flip(data[:command])
+        
+        if np.all(data[:-1] <= data[1:]): # verify that the array is sorted
+            print(f"    {GREEN}Test {i} passed.{BLACK}")
+        else:
+            print(f"    {RED}Test {i} failed.{BLACK}")
+            exit(1)
+
 if __name__ == "__main__":
     test_assignment(1)
     test_assignment(2)
     test_assignment_3()
+    test_assignment_4()

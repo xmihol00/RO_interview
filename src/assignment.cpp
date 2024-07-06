@@ -341,7 +341,7 @@ vector<size_t> getReversalsToSort(const vector<int>& arr)
         size_t correctIdx = binaryIdxSearch(sorted, arr[i]);
         reversals.push_back(correctIdx + 1);
         reversals.push_back(correctIdx); // assume that 0 elements can be reversed for simplicity
-        sorted.insert(sorted.begin() + correctIdx, arr[i]); // convert position to index
+        sorted.insert(sorted.begin() + correctIdx, arr[i]); 
     }
     // Time complexity (of this algorithm): O(n*log(n)) if insert is in O(log(n)) or faster, otherwise O(n^2), i.e. this case with STL vector
     // Space complexity: O(n)

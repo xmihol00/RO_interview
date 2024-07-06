@@ -7,7 +7,7 @@ A `Makefile` was created to conveniently compile the sub-assignments with specif
 Some of the approaches require quite recent Intel CPUs. The preferred compiler is therefore from Intel as well. As a result, some of the approaches may not compile on your system.
 
 ## Tests
-Some of the sub-assignments were tested for correctness. The tests can be replicated with the following commands: `python utils/file_gen.py; python tests/test.py`
+All of the sub-assignments were tested for correctness. The tests can be replicated with the following commands: `python utils/file_gen.py; python tests/test.py`.
 
 ## Performance Analysis
 Performance was analyzed on implementation of the first and second sub-assignments. The results can be replicated with the following command: `python tests/performance.py`.

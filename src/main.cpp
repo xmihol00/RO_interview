@@ -140,10 +140,8 @@ int main(int argc, char** argv)
         case 4:
             {// scope for the local variable
                 vector<size_t> reversals = getReversalsToSort(inputVector);
-                for (size_t &value : reversals)
-                {
-                    outputFile << value << ' ';
-                }
+                // write the result to the output file in binary
+                outputFile.write(reinterpret_cast<char *>(reversals.data()), reversals.size() * sizeof(size_t));
             }
             break;
         }
