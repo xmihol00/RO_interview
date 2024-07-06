@@ -68,33 +68,19 @@ int main(int argc, char** argv)
         trie.printASCII();
         cout << endl;
 
-    #ifdef _APPROACH_3_
-        #pragma omp parallel
-    #endif
-        {
-        #ifdef _APPROACH_3_
-            #pragma omp single
-            cerr << "Number of threads: " << omp_get_num_threads() << endl;
-            cerr << "Thread " << omp_get_thread_num() << " is working." << endl;
-        
-            #pragma omp single
-        #endif
-            {
-                outputFile << getLevelSum(trie, 0) << endl;
-                outputFile << getLevelSum(trie, 1) << endl;
-                outputFile << getLevelSum(trie, 2) << endl;
-                outputFile << getLevelSum(trie, 3) << endl;
-                outputFile << getLevelSum(trie, 4) << endl;
-                outputFile << getLevelSum(trie, 5) << endl;
-                outputFile << getLevelSum(trie, 6) << endl;
-                outputFile << getLevelSum(trie, 7) << endl;
-                outputFile << getLevelSum(trie, 8) << endl;
-                outputFile << getLevelSum(trie, 9) << endl;
-                outputFile << getLevelSum(trie, 10) << endl;
-                outputFile << getLevelSum(trie, 11) << endl;
-                outputFile << getLevelSum(trie, 123) << endl;
-            }
-        }
+        outputFile << getLevelSum(trie, 0) << endl;
+        outputFile << getLevelSum(trie, 1) << endl;
+        outputFile << getLevelSum(trie, 2) << endl;
+        outputFile << getLevelSum(trie, 3) << endl;
+        outputFile << getLevelSum(trie, 4) << endl;
+        outputFile << getLevelSum(trie, 5) << endl;
+        outputFile << getLevelSum(trie, 6) << endl;
+        outputFile << getLevelSum(trie, 7) << endl;
+        outputFile << getLevelSum(trie, 8) << endl;
+        outputFile << getLevelSum(trie, 9) << endl;
+        outputFile << getLevelSum(trie, 10) << endl;
+        outputFile << getLevelSum(trie, 11) << endl;
+        outputFile << getLevelSum(trie, 123) << endl;
     }
     else
     {

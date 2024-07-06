@@ -199,7 +199,7 @@ int getLevelSum(const INode& root, size_t n)
 {
 #ifdef _APPROACH_1_
     // Simple recursive approach, i.e. depth-first traversal.
-    if (n == 0)
+    if (n == 0) // required level reached - base case
     {
         return root.value();
     }
@@ -210,7 +210,7 @@ int getLevelSum(const INode& root, size_t n)
         {
             if (child != nullptr)
             {
-                sum += getLevelSum(*child, n - 1);
+                sum += getLevelSum(*child, n - 1); // recursion
             }
         }
         return sum;
@@ -225,17 +225,18 @@ int getLevelSum(const INode& root, size_t n)
 
     while (!nodeQueue.empty())
     {
+        // dequeue the first node
         const INode *node = nodeQueue.front().first;
         size_t level = nodeQueue.front().second;
         nodeQueue.pop();
 
-        if (level == 0)
+        if (level == 0) // required level reached
         {
             sum += node->value();
         }
         else
         {
-            for (const auto &child : node->children())
+            for (const auto &child : node->children()) // enqueue all valid children
             {
                 if (child != nullptr)
                 {
@@ -248,8 +249,20 @@ int getLevelSum(const INode& root, size_t n)
 #endif
 
 #ifdef _APPROACH_3_
-    // Add OpenMP to the 1st approach for parallelism.
-    if (n == 0)
+    // OpenMP approach, depth-first traversal with task parallelism. However, this won't be efficient for such a simple recursive function.
+    size_t sum = 0;
+    #pragma omp parallel
+    {
+        #pragma omp master // spawn the tasks by a single thread
+        sum = getLevelSumOMP(root, n);
+    }
+    return sum;
+#endif
+}
+#ifdef _APPROACH_3_
+int getLevelSumOMP(const INode& root, size_t n)
+{
+    if (n == 0) // required level reached - base case
     {
         return root.value();
     }
@@ -261,17 +274,18 @@ int getLevelSum(const INode& root, size_t n)
             if (child != nullptr)
             {
                 INode *childPtr = child.get();
-                #pragma omp task shared(sum) // parallelize the work
-                #pragma omp atomic update    // avoid race condition
-                sum += getLevelSum(*childPtr, n - 1);
+                #pragma omp task shared(sum) firstprivate(childPtr) // parallelize the work - spawn a task
+                #pragma omp atomic update  // avoid race condition
+                sum += getLevelSumOMP(*childPtr, n - 1); // recursion
             }
         }
 
-        #pragma omp taskwait // wait for all tasks to finish
+        #pragma omp taskwait // wait for all spawned tasks to finish before returning the result
+                             // actually, the tasks are dispatched to the waiting threads at this point
         return sum;
     }
-#endif
 }
+#endif
 
 /**
  * Imagine a sort algorithm, that sorts array of integers by repeatedly reversing
@@ -311,13 +325,14 @@ vector<size_t> getReversalsToSort(const vector<int>& arr)
     */
     // Without any prove, this algorithm should work for any input array.   
 
+    // standard binary search in a sorted array returning an index, where the searched element is located or should be inserted at
     auto binaryIdxSearch = [](const vector<int>& sorted, int element) -> size_t
     {
         size_t left = 0;
         size_t right = sorted.size();
         while (left < right)
         {
-            size_t middle = (left + right) >> 1;
+            size_t middle = (left + right) >> 1; // halve the search interval
             if (sorted[middle] < element)
             {
                 left = middle + 1;
@@ -343,8 +358,8 @@ vector<size_t> getReversalsToSort(const vector<int>& arr)
         reversals.push_back(correctIdx); // assume that 0 elements can be reversed for simplicity
         sorted.insert(sorted.begin() + correctIdx, arr[i]); 
     }
-    // Time complexity (of this algorithm): O(n*log(n)) if insert is in O(log(n)) or faster, otherwise O(n^2), i.e. this case with STL vector
-    // Space complexity: O(n)
+    // Time complexity (of this algorithm): O(n*log(n)) if 'insert' is in O(log(n)) or faster, otherwise O(n^2), i.e. this case with STL vector
+    // Space complexity: O(n) - both 'reversals' and 'sorted' grow linearly with the input array
 
     // The following code is just post-processing of the reversals vector to make it more efficient.
     // mark reversals of a single element as useless
