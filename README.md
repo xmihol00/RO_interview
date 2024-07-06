@@ -1,6 +1,16 @@
 # Interview Assignment to RoboAuto
 Some of the sub-assignments are solved using several approaches, usually from naive to advanced. See the `#ifdef` preprocessor directives in the `assignment.cpp` file.
 
+## Repository Structure
+```
+├── figs/           -- performance plots of tested algorithms
+├── src/            -- C++ source files, including the interview assignment files
+├── tests/          -- correctness and performance tests of the implemented algorithms written in Python
+├── utils/          -- Python utility scripts
+├── Makefile        -- commands for compiling an executable
+└── README.md
+```
+
 ## Compilation
 A `Makefile` was created to conveniently compile the sub-assignments with specific implemented approach. Commands `make a1`, `make a2` and `make a3` can be used to compile for the first, second and third approach respectively.
 
