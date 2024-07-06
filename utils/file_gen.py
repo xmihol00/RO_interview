@@ -8,6 +8,7 @@ np.array([-1, 1, -1], dtype=np.int32).tofile(os.path.join(DST_DIR, "t1_1.bin"))
 np.array([4, 3, 2], dtype=np.int32).tofile(os.path.join(DST_DIR, "t1_2.bin"))
 np.array([4, 3, -2], dtype=np.int32).tofile(os.path.join(DST_DIR, "t1_-2.bin"))
 np.array([200, -6, 300, -6, -6, 400, 100, -6, 6], dtype=np.int32).tofile(os.path.join(DST_DIR, "t1_6.bin"))
+
 data = np.arange(10, 2**16 + 10, dtype=np.int32)
 data[10] = -5
 data[100] = -5
@@ -21,6 +22,12 @@ data[np.random.choice(np.arange(2**16), 50, replace=False)] = 8
 data[np.random.choice(np.arange(2**16), 50, replace=False)] = -8
 data[12345] = -7
 data.tofile(os.path.join(DST_DIR, "t1_-7.bin"))
+
+data = np.random.randint(-1000, 1000, 2**16, dtype=np.int32)
+data[abs(data) < 10] = 9999
+data[np.random.choice(np.arange(2**16), 50, replace=False)] = 8
+data[np.random.choice(np.arange(2**16), 50, replace=False)] = -8
+data.tofile(os.path.join(DST_DIR, "t1_8.bin"))
 
 np.array([0, 0], dtype=np.int32).tofile(os.path.join(DST_DIR, "t2_0.bin"))
 np.array([0, 0, 1], dtype=np.int32).tofile(os.path.join(DST_DIR, "t2_1.bin"))
@@ -49,6 +56,27 @@ data.tofile(os.path.join(DST_DIR, "t2_6.bin"))
 data = data - 1
 data.tofile(os.path.join(DST_DIR, "t2_inv_6.bin"))
 
+data = np.random.randint(-10000, 10000, 2**16, dtype=np.int32)
+data[data == 0] = 111111
+
+data[13] = 0
+data[14] = 0
+data[15] = 0
+
+data[100] = 0
+
+data[256] = 0
+
+data[510] = 0
+data[511] = 0
+
+data[1000] = 0
+
+data[1023] = 0
+
+data[1025] = 0
+
+data.tofile(os.path.join(DST_DIR, "t2_8.bin"))
 
 np.array([12, 13, 11, 14], dtype=np.int32).tofile(os.path.join(DST_DIR, "t4_2-3.bin"))
 

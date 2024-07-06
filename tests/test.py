@@ -31,7 +31,7 @@ def test_assignment(number : int):
             file_base = os.path.basename(filename).replace(".bin", "")
             output_filename = file_base + ".txt"
             
-            os.system(f"file={file_base}; ./main -t {number} -i {TEST_FILES_DIR}/$file.bin -o {RESULT_FILES_DIR}/$file.txt")
+            os.system(f"file={file_base}; ./main -t {number} -i {TEST_FILES_DIR}/$file.bin -o {RESULT_FILES_DIR}/$file.txt 2>/dev/null")
             try:
                 with open(f"{RESULT_FILES_DIR}/{output_filename}", "r") as f:
                     output = f.read().strip()
@@ -82,17 +82,15 @@ def test_assignment_3():
             print(f"    {RED}{filename} failed.{BLACK} Expected: {result}, got: {output}")
 
 def test_assignment_4():
-    np.random.seed(42)
-
     print(f"{CYAN}Testing assignment 4{BLACK}")
     os.system(f"rm -rf {RESULT_FILES_DIR}")
     os.makedirs(RESULT_FILES_DIR, exist_ok=True)
     os.system(f"make 2>/dev/null >/dev/null")
     filename = "t4_random.bin"
 
-    for i in range(10):
+    for i in range(25):
         n = np.random.randint(1, 100)
-        data = np.random.randint(-100, 100, n, dtype=np.int32)
+        data = np.random.randint(-1000, 1000, n, dtype=np.int32)
         data.tofile(os.path.join(TEST_FILES_DIR, filename))
 
         os.system(f"file={filename}; ./main -t 4 -i {TEST_FILES_DIR}/$file -o {RESULT_FILES_DIR}/$file")
@@ -112,9 +110,15 @@ def test_assignment_4():
         else:
             print(f"    {RED}Test {i} failed.{BLACK}")
             exit(1)
+    
+    os.system(f"rm -rf {TEST_FILES_DIR}/{filename}")
 
 if __name__ == "__main__":
+    os.makedirs(RESULT_FILES_DIR, exist_ok=True)
+
     test_assignment(1)
     test_assignment(2)
     test_assignment_3()
     test_assignment_4()
+
+    os.system(f"rm -rf {RESULT_FILES_DIR}")

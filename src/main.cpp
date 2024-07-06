@@ -121,8 +121,9 @@ int main(int argc, char** argv)
                 int result = getClosestToZero(inputVector);
                 auto end = chrono::high_resolution_clock::now();
                 auto duration = chrono::duration_cast<chrono::milliseconds>(end - start);
-                cerr << duration.count() << endl;
                 outputFile << result; // write the result to the output file in ASCII
+
+                cerr << duration.count() << endl;
             }
             break;
         
@@ -132,8 +133,9 @@ int main(int argc, char** argv)
                 int result = countChunks(inputVector);
                 auto end = chrono::high_resolution_clock::now();
                 auto duration = chrono::duration_cast<chrono::milliseconds>(end - start);
-                cerr << duration.count() << endl;
                 outputFile << result; // write the result to the output file in ASCII
+                
+                cerr << duration.count() << endl;
             }
             break;
         

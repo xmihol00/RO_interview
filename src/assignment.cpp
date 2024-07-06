@@ -346,7 +346,41 @@ vector<size_t> getReversalsToSort(const vector<int>& arr)
     // Time complexity (of this algorithm): O(n*log(n)) if insert is in O(log(n)) or faster, otherwise O(n^2), i.e. this case with STL vector
     // Space complexity: O(n)
 
-    // TODO: do some post processing, i.e remove unnecessary reversals
+    // The following code is just post-processing of the reversals vector to make it more efficient.
+    // mark reversals of a single element as useless
+    for (size_t &reversal : reversals)
+    {
+        if (reversal == 1)
+        {
+            reversal = 0;
+        }
+    }
+
+    // remove redundant reversals, i.e. 2 same reversals in a row
+    bool modified = true;
+    while (modified) // each removal can create a new redundant reversal
+    {
+        modified = false;
+        size_t lastValue = 0;
+        size_t lastIdx = 0;
+        for (size_t i = 0; i < reversals.size(); i++)
+        {
+            if (reversals[i] != 0) // skip the already removed reversals
+            {
+                if (reversals[i] == lastValue) // two consecutive same reversals
+                {
+                    reversals[lastIdx] = 0;
+                    reversals[i] = 0;
+                    modified = true;
+                }
+                lastValue = reversals[i];
+                lastIdx = i;
+            }
+        }
+    }
+
+    // pack the vector (move all non-zeros to the front with 'remove' and truncate the vector with 'erase')
+    reversals.erase(remove(reversals.begin(), reversals.end(), 0), reversals.end());
     
     return reversals;
 }
