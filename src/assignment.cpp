@@ -249,43 +249,42 @@ int getLevelSum(const INode& root, size_t n)
 #endif
 
 #ifdef _APPROACH_3_
-    // OpenMP approach, depth-first traversal with task parallelism. However, this won't be efficient for such a simple recursive function.
-    size_t sum = 0;
+    // OpenMP approach, depth-first traversal similar to the 1st approach but with task parallelism.
+    function<int(const INode&, size_t)> taskLambda = [&taskLambda](const INode& root, size_t n) -> int
+    {
+        if (n == 0) // required level reached - base case
+        {
+            return root.value();
+        }
+        else
+        {
+            int sum = 0;
+            for (const auto &child : root.children())
+            {
+                if (child != nullptr)
+                {
+                    INode *childPtr = child.get();
+                    #pragma omp task shared(sum) firstprivate(childPtr) // parallelize the work - spawn a task
+                    #pragma omp atomic update  // avoid race condition
+                    sum += taskLambda(*childPtr, n - 1); // recursion
+                }
+            }
+
+            #pragma omp taskwait // wait for all spawned tasks to finish before returning the result
+                                 // actually, the tasks are dispatched to the waiting threads at this point
+            return sum;
+        }
+    };
+
+    int sum = 0;
     #pragma omp parallel
     {
         #pragma omp master // spawn the tasks by a single thread
-        sum = getLevelSumOMP(root, n);
+        sum = taskLambda(root, n);
     }
     return sum;
 #endif
 }
-#ifdef _APPROACH_3_
-int getLevelSumOMP(const INode& root, size_t n)
-{
-    if (n == 0) // required level reached - base case
-    {
-        return root.value();
-    }
-    else
-    {
-        int sum = 0;
-        for (const auto &child : root.children())
-        {
-            if (child != nullptr)
-            {
-                INode *childPtr = child.get();
-                #pragma omp task shared(sum) firstprivate(childPtr) // parallelize the work - spawn a task
-                #pragma omp atomic update  // avoid race condition
-                sum += getLevelSumOMP(*childPtr, n - 1); // recursion
-            }
-        }
-
-        #pragma omp taskwait // wait for all spawned tasks to finish before returning the result
-                             // actually, the tasks are dispatched to the waiting threads at this point
-        return sum;
-    }
-}
-#endif
 
 /**
  * Imagine a sort algorithm, that sorts array of integers by repeatedly reversing
@@ -306,7 +305,7 @@ vector<size_t> getReversalsToSort(const vector<int>& arr)
     // Let's use some kind of divide and conquer approach.
     // We can interpret sorting as repeatedly placing an element to its correct position in a sorted array, i.e. insertion sort.
     // Therefore, the algorithm can be simplified to repeatedly emplacing yet an unsorted element using the reversals.
-    // Let's look at some examples (in columns):
+    // Let's look at some examples (computation indicated in columns):
     /*  
         a)        b)        c)          d)          e)            f) 
         1 3 4 2   1 2 4 3   1 2 3 5 4   1 2 4 5 3   1 2 3 5 6 4   1 2 3 4 6 5
@@ -323,7 +322,7 @@ vector<size_t> getReversalsToSort(const vector<int>& arr)
         4. reverse N elements,
         5. reverse N-1 elements.
     */
-    // Without any prove, this algorithm should work for any input array.   
+    // Without any proof, this algorithm should work for any input array.   
 
     // standard binary search in a sorted array returning an index, where the searched element is located or should be inserted at
     auto binaryIdxSearch = [](const vector<int>& sorted, int element) -> size_t
@@ -350,7 +349,8 @@ vector<size_t> getReversalsToSort(const vector<int>& arr)
     sorted.push_back(arr[0]);
     for (size_t i = 1; i < arr.size(); i++)
     {
-        // the simplest solution probably, of course, there are many ways how to generate less reversals
+        // the simplest solution
+        // of course, there are many ways how to generate less reversals
         reversals.push_back(i);
         reversals.push_back(i + 1);
         size_t correctIdx = binaryIdxSearch(sorted, arr[i]);
@@ -362,18 +362,17 @@ vector<size_t> getReversalsToSort(const vector<int>& arr)
     // Space complexity: O(n) - both 'reversals' and 'sorted' grow linearly with the input array
 
     // The following code is just post-processing of the reversals vector to make it more efficient.
-    // mark reversals of a single element as useless
     for (size_t &reversal : reversals)
     {
-        if (reversal == 1)
+        if (reversal == 1) // mark reversals of a single element as useless
         {
             reversal = 0;
         }
     }
 
-    // remove redundant reversals, i.e. 2 same reversals in a row
+    // remove redundant reversals, i.e. 2 same consecutive reversals
     bool modified = true;
-    while (modified) // each removal can create a new redundant reversal
+    while (modified) // each removal can create a new redundant reversals
     {
         modified = false;
         size_t lastValue = 0;
@@ -384,8 +383,10 @@ vector<size_t> getReversalsToSort(const vector<int>& arr)
             {
                 if (reversals[i] == lastValue) // two consecutive same reversals
                 {
+                    // mark the pair of reversals as useless
                     reversals[lastIdx] = 0;
                     reversals[i] = 0;
+
                     modified = true;
                 }
                 lastValue = reversals[i];

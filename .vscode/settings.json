@@ -4,6 +4,12 @@
         "array": "cpp",
         "string": "cpp",
         "string_view": "cpp",
-        "stdexcept": "cpp"
+        "stdexcept": "cpp",
+        "*.tcc": "cpp",
+        "memory": "cpp",
+        "istream": "cpp",
+        "functional": "cpp",
+        "tuple": "cpp",
+        "utility": "cpp"
     }
 }
