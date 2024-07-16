@@ -353,7 +353,8 @@ vector<size_t> getReversalsToSort(const vector<int>& arr)
         // of course, there are many ways how to generate less reversals
         reversals.push_back(i);
         reversals.push_back(i + 1);
-        size_t correctIdx = binaryIdxSearch(sorted, arr[i]);
+        //size_t correctIdx = binaryIdxSearch(sorted, arr[i]);
+        size_t correctIdx = lower_bound(sorted.begin(), sorted.end(), arr[i]) - sorted.begin();
         reversals.push_back(correctIdx + 1);
         reversals.push_back(correctIdx); // assume that 0 elements can be reversed for simplicity
         sorted.insert(sorted.begin() + correctIdx, arr[i]); 
